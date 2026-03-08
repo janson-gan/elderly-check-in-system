@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+@theme {
+  --font-size-senior-sm: 1.125rem;
+  --font-size-senior-md: 1.25rem;
+  --font-size-senior-lg: 1.5rem;
+  --font-size-senior-xl: 1.875rem;
+  --font-size-senior-2xl: 2.25rem;
+  --spacing-touch: 48px;
+}
+
+@layer utilities {
+  .text-senior-sm  { font-size: 1.125rem; }
+  .text-senior-md  { font-size: 1.25rem;  }
+  .text-senior-lg  { font-size: 1.5rem;   }
+  .text-senior-xl  { font-size: 1.875rem; }
+  .text-senior-2xl { font-size: 2.25rem;  }
+  .min-h-touch     { min-height: 48px;    }
+  .min-w-touch     { min-width: 48px;     }
+}
+
+body {
+  font-size: 1.125rem;
+  line-height: 1.75;
+}
