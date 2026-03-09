@@ -167,3 +167,4 @@ Built by [Gan Boon Chai Janson] — Mid-career switcher transitioning into data 
 
 - GitHub: [@janson-gan](https://github.com/janson-gan)
 - LinkedIn: [Janson Gan](https://www.linkedin.com/in/jansongan/)
+- Website: [Janson Gan Portfolio](https://janson-gan.github.io/my-portfolio/index.html)
