@@ -2,18 +2,18 @@ import { z } from "zod";
 
 // Validate the register input
 export const registerSchema = z.object({
-  email: z.string().email("Invalid email format"),
+  email: z.string().trim().toLowerCase().pipe(z.email("Invalid email format")),
   password: z
     .string()
     .min(8, "Password must be at least 8 characters")
     .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
     .regex(/[0-9]/, "Password must contain at least one number"),
   role: z.enum(["senior", "family", "admin"]),
-  firstName: z
+  first_name: z
     .string()
     .min(1, "First name is required")
     .max(100, "First name too long"),
-  lastName: z
+  last_name: z
     .string()
     .min(1, "Last name is required")
     .max(100, "Last name too long"),
@@ -25,7 +25,7 @@ export const registerSchema = z.object({
 
 // Validate the login input
 export const loginSchema = z.object({
-  email: z.string().email("Invalid email format"),
+  email: z.email("Invalid email format"),
   password: z.string().min(1, "Password is required"),
 });
 
