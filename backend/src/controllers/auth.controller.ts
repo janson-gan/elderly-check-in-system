@@ -10,13 +10,13 @@ import { JwtPayload } from "../types/auth.types";
 // REGISTER
 //==============================================================
 export const register = async (req: Request, res: Response): Promise<void> => {
-  const { email, password, role, firstName, lastName, phone }: RegisterInput =
+  const { email, password, role, first_name, last_name, phone }: RegisterInput =
     req.body;
 
   try {
     // Check if email already exists
     const exisitingUser = await pool.query(
-      "SELECT id FROM users WHERE id = $1",
+      "SELECT id FROM users WHERE email = $1",
       [email],
     );
     if (exisitingUser.rows.length > 0) {
@@ -32,21 +32,21 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
     // Insert new user into database
     const newUser = await pool.query(
-      `INSER INTO users (email, password, role, firstName, lastName, phone) 
-      VALUES (S1, $2, $3, $4, $5, $6) 
-      Retuning id, email, password, role, firstName, lastName, phone, created_at`,
-      [email, password, firstName, lastName, phone],
+      `INSERT INTO users (email, password, role, first_name, last_name, phone) 
+      VALUES ($1, $2, $3, $4, $5, $6) 
+      Returning id, email, role, first_name, last_name, phone, created_at`,
+      [email, hashPassword, role, first_name, last_name, phone],
     );
 
     const user = newUser.rows[0];
 
-    if (user === "seniors") {
-      await pool.query(`INSERT INTO seniors (userId) VALUES ($1)`, [user.id]);
+    if (role === "senior") {
+      await pool.query(`INSERT INTO seniors (user_id) VALUES ($1)`, [user.id]);
     }
 
     // Create default reminder at 9am
     const seniorRecord = await pool.query(
-      "SELECT id FROM seniors WHERE id = $1",
+      "SELECT id FROM seniors WHERE user_id = $1",
       [user.id],
     );
     await pool.query(
@@ -106,7 +106,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     // Find user by email
     const result = await pool.query(
-      `SELECT id, email, password, role, firstName, lastName, phone, is_active FROM uses WHERE email = $1`,
+      `SELECT id, email, password, role, first_name, last_name, phone, is_active FROM users WHERE email = $1`,
       [email],
     );
 
@@ -162,6 +162,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     res.status(200).json({
       success: true,
       message: "Login successful",
+      token,
       user: {
         id: user.id,
         email: user.email,
@@ -188,7 +189,7 @@ export const getUser = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = (req as any).user?.userId;
     const result = await pool.query(
-      `SELECT id, email, role, firstName, lastName, phone, is_active, created_at FROM users WHERE id = $1`,
+      `SELECT id, email, role, first_name, last_name, phone, is_active, created_at FROM users WHERE id = $1`,
       [userId],
     );
 
