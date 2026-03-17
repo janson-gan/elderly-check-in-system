@@ -12,8 +12,8 @@ export interface RegisterInput {
   email: string;
   password: string;
   role: "senior" | "family" | "admin";
-  firstName: string;
-  lastName: string;
+  first_name: string;
+  last_name: string;
   phone?: string;
 }
 
