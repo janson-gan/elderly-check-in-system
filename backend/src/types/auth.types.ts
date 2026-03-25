@@ -1,5 +1,8 @@
 import { extend } from "zod/mini";
 
+// Role type for authorise
+export type Role = "admin" | "family" | "senior"
+
 // Properties store inside JWT payload
 export interface JwtPayload {
   userId: number;
