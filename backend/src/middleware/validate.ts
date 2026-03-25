@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { ZodType } from "zod";
 import logger from "../config/logger";
+import { HTTP_STATUS, MESSAGES } from "../config/constants";
 
 // This is to check the incoming request body is valid
 
@@ -17,13 +18,13 @@ const validate = (schema: ZodType) => {
         field: err.path.join("."),
         message: err.message,
       }));
-      logger.warn(`Validation failed: ${JSON.stringify(errors)}`);
+      logger.warn(`${MESSAGES.VALIDATION.FAILED}: ${JSON.stringify(errors)}`);
 
       // Response with status code of 400 bad request and JSON error message response
       // and stop the process
-      res.status(400).json({
+      res.status(HTTP_STATUS.BAD_REQUEST).json({
         success: false,
-        message: "Validation failed",
+        message: MESSAGES.VALIDATION.FAILED,
         errors,
       });
       return;

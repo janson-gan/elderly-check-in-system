@@ -5,6 +5,7 @@ import "./config/db";
 import logger from "./config/logger";
 import initDB from "./config/initDB";
 import authRoutes from "./routes/auth.routes";
+import { MESSAGES } from "./config/constants";
 
 // Load environment variables from .env file
 dotenv.config();
@@ -22,7 +23,7 @@ app.use("/api/auth", authRoutes);
 // Test the route and server
 app.get("/", (req: Request, res: Response) => {
   res.json({
-    message: "Elderly check-in System API is running.",
+    message: MESSAGES.SERVER.RUNNING,
   });
 });
 

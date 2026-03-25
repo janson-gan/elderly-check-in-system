@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { JwtPayload } from "jsonwebtoken";
 import logger from "../config/logger";
+import { HTTP_STATUS, JWT, MESSAGES } from "../config/constants";
 
 // Extend Express Request type to include user
 declare global {
@@ -20,10 +21,10 @@ const authenticate = (
   try {
     // Get token from Authorization header
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      res.status(401).json({
+    if (!authHeader || !authHeader.startsWith(JWT.BEARER_PREFIX)) {
+      res.status(HTTP_STATUS.UNAUTHORIZED).json({
         success: false,
-        message: "Access denied. No token provided.",
+        message: MESSAGES.AUTH.NOT_AUTHENTICATED,
       });
       return;
     }

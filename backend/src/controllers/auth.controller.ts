@@ -5,6 +5,14 @@ import pool from "../config/db";
 import logger from "../config/logger";
 import { RegisterInput, LoginInput } from "../types/validation";
 import { JwtPayload } from "../types/auth.types";
+import {
+  HTTP_STATUS,
+  ROLES,
+  JWT,
+  BCRYPT,
+  DEFAULT_REMINDER,
+  MESSAGES,
+} from "../config/constants";
 
 //==============================================================
 // REGISTER
@@ -20,14 +28,14 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       [email],
     );
     if (exisitingUser.rows.length > 0) {
-      res.status(409).json({
+      res.status(HTTP_STATUS.CONFLICT).json({
         success: false,
-        message: "An account with this email already exists.",
+        message: MESSAGES.AUTH.EMAIL_EXISTS,
       });
       return;
     }
     // Hash the password
-    const saltRounds = 12;
+    const saltRounds = BCRYPT.SALT_ROUNDS;
     const hashPassword = await bcrypt.hash(password, saltRounds);
 
     // Insert new user into database
@@ -40,7 +48,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
     const user = newUser.rows[0];
 
-    if (role === "senior") {
+    if (role === ROLES.SENIOR) {
       await pool.query(`INSERT INTO seniors (user_id) VALUES ($1)`, [user.id]);
 
       // Create default reminder at 9am
@@ -51,8 +59,8 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
       await pool.query(
         `INSERT INTO reminders (senior_id, reminder_time, grace_period_minutes)
-        VALUES ($1, '09:00:00', 60)`,
-        [seniorRecord.rows[0].id],
+        VALUES ($1, $2, $3)`,
+         [parseInt(seniorRecord.rows[0].id), DEFAULT_REMINDER.TIME, DEFAULT_REMINDER.GRACE_PERIOD_MINUTES]
       );
 
       logger.info(`Senior profile created for user: ${email}`);
@@ -67,7 +75,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     const secret = process.env.JWT_SECRET as Secret;
     const options: SignOptions = {
       expiresIn: (process.env.JWT_EXPIRES_IN ||
-        "7d") as SignOptions["expiresIn"],
+        JWT.DEFAULT_EXPIRED_IN) as SignOptions["expiresIn"],
     };
 
     const token = jwt.sign(payload, secret, options);
@@ -75,9 +83,9 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     logger.info(`New user registered: ${email} as ${role}`);
 
     // Send response
-    res.status(201).json({
+    res.status(HTTP_STATUS.CREATED).json({
       success: true,
-      message: "Account created successfully",
+      message: MESSAGES.AUTH.ACCOUNT_CREATED,
       token,
       user: {
         id: user.id,
@@ -90,9 +98,9 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     });
   } catch (error) {
     logger.error(`Registration error: ${error}`);
-    res.status(500).json({
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
       success: false,
-      message: "Internal server error",
+      message: MESSAGES.SERVER.INTERNAL_ERROR,
     });
   }
 };
@@ -112,9 +120,9 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     );
 
     if (result.rows.length === 0) {
-      res.status(401).json({
+      res.status(HTTP_STATUS.UNAUTHORIZED).json({
         success: false,
-        message: "Invalid email or password",
+        message: MESSAGES.AUTH.INVALID_CREDENTIALS,
       });
       return;
     }
@@ -123,9 +131,9 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
     // Check if account is active
     if (!user.is_active) {
-      res.status(403).json({
+      res.status(HTTP_STATUS.FORBIDDEN).json({
         success: false,
-        message: "Your account has been deactivate. Please contact support.",
+        message: MESSAGES.AUTH.ACCOUNT_DEACTIVATED,
       });
       return;
     }
@@ -135,9 +143,9 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
     if (!isPasswordValid) {
       logger.warn(`Failed login attempt for email: ${email}`);
-      res.status(401).json({
+      res.status(HTTP_STATUS.UNAUTHORIZED).json({
         success: false,
-        message: "Invalid email or password",
+        message: MESSAGES.AUTH.INVALID_CREDENTIALS,
       });
       return;
     }
@@ -152,7 +160,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     const secret = process.env.JWT_SECRET as Secret;
     const options: SignOptions = {
       expiresIn: (process.env.JWT_EXPIRES_IN ||
-        "7d") as SignOptions["expiresIn"],
+        JWT.DEFAULT_EXPIRED_IN) as SignOptions["expiresIn"],
     };
 
     const token = jwt.sign(payload, secret, options);
@@ -162,7 +170,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     // Send response
     res.status(200).json({
       success: true,
-      message: "Login successful",
+      message: MESSAGES.AUTH.LOGIN_SUCCESS,
       token,
       user: {
         id: user.id,
@@ -175,9 +183,9 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     });
   } catch (error) {
     logger.error(`Login error: ${error}`);
-    res.status(500).json({
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
       success: false,
-      message: "Internal server error",
+      message: MESSAGES.SERVER.INTERNAL_ERROR,
     });
   }
 };
@@ -195,22 +203,22 @@ export const getUser = async (req: Request, res: Response): Promise<void> => {
     );
 
     if (result.rows.length === 0) {
-      res.status(404).json({
+      res.status(HTTP_STATUS.NOT_FOUND).json({
         suceess: false,
-        message: "User not found",
+        message: MESSAGES.AUTH.USER_NOT_FOUND,
       });
       return;
     }
 
-    res.status(200).json({
+    res.status(HTTP_STATUS.OK).json({
       success: true,
       user: result.rows[0],
     });
   } catch (error) {
     logger.error(`Get current user error: ${error}`);
-    res.status(500).json({
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
       succes: false,
-      message: "Internal server error",
+      message: MESSAGES.SERVER.INTERNAL_ERROR,
     });
   }
 };

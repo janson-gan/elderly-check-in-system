@@ -1,14 +1,15 @@
 import { Request, Response, NextFunction } from "express";
 import logger from "../config/logger";
 import { Role } from "../types/auth.types";
+import { HTTP_STATUS, MESSAGES } from "../config/constants";
 
 const authorise = (...roles: Role[]) => {
   return (req: Request, res: Response, next: NextFunction): void => {
     // Check if user exists on request
     if (!req.user) {
-      res.status(401).json({
+      res.status(HTTP_STATUS.UNAUTHORIZED).json({
         success: false,
-        message: "Access denied. Not Authenticated.",
+        message: MESSAGES.AUTH.NOT_AUTHENTICATED,
       });
       return;
     }
@@ -19,7 +20,7 @@ const authorise = (...roles: Role[]) => {
         `Unauthorised access attempt by ${req.user.email}
             with role ${req.user.role} on route requiring ${roles.join(", ")}`,
       );
-      res.status(403).json({
+      res.status(HTTP_STATUS.FORBIDDEN).json({
         success: false,
         message: `Access denied. Required role: ${roles.join(" or ")}.`,
       });
