@@ -42,20 +42,21 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
     if (role === "senior") {
       await pool.query(`INSERT INTO seniors (user_id) VALUES ($1)`, [user.id]);
-    }
 
-    // Create default reminder at 9am
-    const seniorRecord = await pool.query(
-      "SELECT id FROM seniors WHERE user_id = $1",
-      [user.id],
-    );
-    await pool.query(
-      `INSERT INTO reminders (senior_id, reminder_time, grace_period_minutes)
+      // Create default reminder at 9am
+      const seniorRecord = await pool.query(
+        "SELECT id FROM seniors WHERE user_id = $1",
+        [user.id],
+      );
+
+      await pool.query(
+        `INSERT INTO reminders (senior_id, reminder_time, grace_period_minutes)
         VALUES ($1, '09:00:00', 60)`,
-      [seniorRecord.rows[0].id],
-    );
-    logger.info(`Senior profile created for user: ${email}`);
+        [seniorRecord.rows[0].id],
+      );
 
+      logger.info(`Senior profile created for user: ${email}`);
+    }
     // Generate JWT token
     const payload: JwtPayload = {
       userId: user.id,
